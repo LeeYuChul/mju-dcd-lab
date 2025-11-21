@@ -1,6 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { fetchMasterStudents, fetchGraduateStudents, fetchProjects } from '../api/notion';
+import type { MasterStudent, GraduateStudent, Project } from '../types/notion';
+import profImage from '../assets/image/prof.jpeg';
 
 const Home: React.FC = () => {
+    const [masterStudents, setMasterStudents] = useState<MasterStudent[]>([]);
+    const [graduates, setGraduates] = useState<GraduateStudent[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const [students, grads, projs] = await Promise.all([
+                    fetchMasterStudents(),
+                    fetchGraduateStudents(),
+                    fetchProjects()
+                ]);
+                setMasterStudents(students);
+                setGraduates(grads);
+                setProjects(projs);
+            } catch (error) {
+                console.error('Failed to load data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadData();
+    }, []);
+
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <header className="text-right text-sm text-text-secondary-light dark:text-text-secondary-dark space-y-2 mb-20">
@@ -19,8 +48,44 @@ const Home: React.FC = () => {
                 </div>
                 <section className="max-w-4xl mx-auto mb-24 text-base leading-relaxed space-y-6">
                     <p>명지대학교 DCD 랩은 Design Convergence and Digital media의 약자로 '사람들에게 좋은 경험을 제공할 수 있도록 깊이 연구하여 좋은 디자인을 만들겠다' 라는 바램과 가치관이 담겨있습니다. DCD 랩에서 집중하고 있는 연구분야로는 면밀한 사용자 조사를 기반으로 한 UX·UI 연구, 사용자의 행동을 유도하고 기만하는 Persuasive 디자인 연구, 수집된 데이터를 시각화하여 인사이트를 제공하는 Data Visualization 연구, 인공지능 솔루션을 효과적으로 사용할 수 있도록 도와주는 AI Interaction Design 연구 등으로 구성되어 있습니다.</p>
-                    <p>DCD 랩은 '디자인만 하고 싶은 사람이 아닌, '사람에 대한 관심이 많은 사람들'로 구성되어 있습니다. 보기 좋게 만들고, 사용하기 편리하게 만드는 것을 디자인이라 생각할 수 있지만, 정교하게 설계된 디자인은 기술과 사람을 바람직하게 연결해 주며 궁극적으로 사용자의 행동을 긍정적으로 유도하기도 합니다. DCD 랩은 사람에 대한 이해와 열정을 바탕으로 지속적으로 연구하고자 합니다.</p>
                 </section>
+                                <section className="mb-32">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div className="flex flex-col items-center md:items-start">
+                            <img alt="Portrait of Professor Shin Hye-Ryeon" className="w-48 h-48 rounded-full object-cover" src={profImage} />
+                            <h2 className="text-lg font-bold mt-4">신혜련 교수 (부교수)</h2>
+                            <a className="text-sm underline" href="mailto:worksmju@mju.ac.kr">worksmju@mju.ac.kr</a>
+                        </div>
+                        <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <ul className="space-y-1 text-sm">
+                                    <li>명지대학교 인공지능·소프트웨어 융합대학<br />디지털콘텐츠디자인학과 부교수</li>
+                                    <li className="pt-4">Carnegie Mellon University, Computational Design 박사</li>
+                                </ul>
+                                <h3 className="font-bold mb-2 mt-6">수상</h3>
+                                <ul className="space-y-1 text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                    <li>한국HCI학회 우수논문상(2025, 2019)</li>
+                                    <li>Archives of Design Research 최우수논문상(2023)</li>
+                                    <li>대한민국학술원 우수학술도서 선정(2023)</li>
+                                    <li>Red Dot Design Award (2023, 2021)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3 className="font-bold mb-2">대표 프로젝트/논문</h3>
+                                <ul className="space-y-1 text-sm text-text-secondary-light dark:text-text-secondary-dark">
+                                    <li>삼성전자 미래 홈 인비저닝 프로젝트 (2025)</li>
+                                    <li>삼성전자 Intelligent AR 프로젝트 (2024)</li>
+                                    <li>질병청 당뇨예측모형 온라인 계산기 개발 (2024)</li>
+                                    <li>국회 홈페이지 UXUI 가이드라인 디자인 프로젝트 (2023)</li>
+                                    <li>네이버 차세대 검색/AR 디자인 프로젝트(2022)</li>
+                                    <li>한국연구재단 중견연구자 지원사업 (2021 - 2024)</li>
+                                    <li>카카오 오픈 UI/UX 디자인 프로젝트 (2017 - 2018)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12 mb-32">
                     <div>
                         <h3 className="text-lg font-bold">UX·UI·인터랙션 디자인</h3>
@@ -60,101 +125,99 @@ const Home: React.FC = () => {
                     </div>
                 </section>
                 <section className="mb-32">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                        <div className="flex flex-col items-center md:items-start">
-                            <img alt="Portrait of Professor Shin Hye-Ryeon" className="w-48 h-48 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC_w6i2BlGgFZUb7DJrMqWcTBcgtqGoke05AoCkgfv_nbyvgAZhev0HVsRyDVU9q5QfTJwzxhv579SzUX1RiXh6gvqy3D9x-Ib5N2ybkPotW5S1KsF38Xoq7_xMSt31GEekjNTgpAeAsRJY5pCgVOBPrUWc8G5h303RKxiPFxcp2j5HPiZJsQFuaexYeNypj_sCzF430GDnUK8DICSZtWZEhi9WUJZWmG6dO66UqZdv7mMkPB4JiENYwDx5KZom5YweY6Vzeqk18" />
-                            <h2 className="text-lg font-bold mt-4">신혜련 교수 (부교수)</h2>
-                            <a className="text-sm underline" href="mailto:worksmju@mju.ac.kr">worksmju@mju.ac.kr</a>
-                        </div>
-                        <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <ul className="space-y-1 text-sm">
-                                    <li>명지대학교 인공지능·소프트웨어 융합대학<br />디지털콘텐츠디자인학과 부교수</li>
-                                    <li className="pt-4">Carnegie Mellon University, Computational Design 박사</li>
-                                </ul>
-                                <h3 className="font-bold mb-2 mt-6">수상</h3>
-                                <ul className="space-y-1 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    <li>한국HCI학회 우수논문상(2025, 2019)</li>
-                                    <li>Archives of Design Research 최우수논문상(2023)</li>
-                                    <li>대한민국학술원 우수학술도서 선정(2023)</li>
-                                    <li>Red Dot Design Award (2023, 2021)</li>
-                                </ul>
+                    <div className="mb-0">
+                        <h2 className="text-2xl font-bold mb-8">프로젝트</h2>
+                        {loading ? (
+                            <div className="text-center py-10">
+                                <p className="text-text-secondary-light dark:text-text-secondary-dark">로딩 중...</p>
                             </div>
-                            <div>
-                                <h3 className="font-bold mb-2">대표 프로젝트/논문</h3>
-                                <ul className="space-y-1 text-sm text-text-secondary-light dark:text-text-secondary-dark">
-                                    <li>삼성전자 미래 홈 인비저닝 프로젝트 (2025)</li>
-                                    <li>삼성전자 Intelligent AR 프로젝트 (2024)</li>
-                                    <li>질병청 당뇨예측모형 온라인 계산기 개발 (2024)</li>
-                                    <li>국회 홈페이지 UXUI 가이드라인 디자인 프로젝트 (2023)</li>
-                                    <li>네이버 차세대 검색/AR 디자인 프로젝트(2022)</li>
-                                    <li>한국연구재단 중견연구자 지원사업 (2021 - 2024)</li>
-                                    <li>카카오 오픈 UI/UX 디자인 프로젝트 (2017 - 2018)</li>
-                                </ul>
+                        ) : projects.length === 0 ? (
+                            <div className="text-center py-10">
+                                <p className="text-text-secondary-light dark:text-text-secondary-dark">등록된 프로젝트가 없습니다.</p>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                                {projects.map((project, index) => (
+                                    <div 
+                                        key={project.id} 
+                                        className={`h-[400px] relative overflow-hidden ${
+                                            projects.length % 2 !== 0 && index === projects.length - 1 ? 'md:col-span-2' : ''
+                                        }`}
+                                        style={{ backgroundColor: project.backgroundColor.startsWith('#') ? project.backgroundColor : `#${project.backgroundColor}` }}
+                                    >
+                                        <div className="absolute inset-[30px] flex items-center justify-center">
+                                            <img 
+                                                src={project.image} 
+                                                alt={project.title} 
+                                                className="max-w-full max-h-full object-contain"
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </section>
                 <section className="mb-32">
                     <div className="mb-16">
                         <h2 className="text-2xl font-bold mb-8">석사과정 연구원</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-10">
-                            <div className="flex items-center space-x-4">
-                                <img alt="Portrait of a lab member" className="w-16 h-16 rounded-full object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGv4utmqT8uFFVQKsBzlog0NQQUFPCWT5eYjfI-NdzhTVMU39Rjn8qOCBTwlijlsO3T7IGW9Ds2JmM-Pq5ors_7SF6H5nP65laL_KU3FcHJ_aNyGPc1bnUOJGwLAjjXxK-JtUyctQbduylonR3V7GxLU7YXb4sizLxRxesyrjtVlO_OQiFWyDWp3hUGgy1XovF-V89MdENeezB89ho2l_U04U6Y8WAdcjvoG63vRbf0evSOXfvD2j8oPdJfAOe_9XcdAOxzi0-IDE" />
-                                <div>
-                                    <p className="font-bold">조보민</p>
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">UX/UI디자인, 인터랙션디자인, 사용자 행동변화 디자인</p>
-                                    <a className="text-xs underline break-all" href="mailto:bloomytime@naver.com">bloomytime@naver.com</a>
-                                </div>
+                        {loading ? (
+                            <div className="text-center py-10">
+                                <p className="text-text-secondary-light dark:text-text-secondary-dark">로딩 중...</p>
                             </div>
-                            <div className="flex items-center space-x-4">
-                                <img alt="Portrait of a lab member" className="w-16 h-16 rounded-full object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmuOEb51nVyqau3pN0Dl1nU4BiLXBNf--HPtvNDiVr-Vzgcje5PYNdIOq8bNR5zMX6AjnbXwown2q11rWtIJhOijEVrguLleNEBP-M5GoPtQrxtSbFcs5DO2RkoeOfff_Q-N0T3wFJOmhJViFXGimcHuln23v_4fQXSNsjXGvBuwfOGFDUcEXlONaU43SK_TQ7LlLSbMbCgt2lueerkDqiVCiEYSow91HH3lQpkpUpkHsXlWpj0aePQ8OibH9AZjGDhvoIm0FN8FE" />
-                                <div>
-                                    <p className="font-bold">임은수</p>
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">UX/UI디자인, 인공지능 디자인, AR/VR디자인</p>
-                                    <a className="text-xs underline break-all" href="mailto:les0807@naver.com">les0807@naver.com</a>
-                                </div>
+                        ) : masterStudents.length === 0 ? (
+                            <div className="text-center py-10">
+                                <p className="text-text-secondary-light dark:text-text-secondary-dark">등록된 연구원이 없습니다.</p>
                             </div>
-                            <div className="flex items-center space-x-4">
-                                <img alt="Portrait of a lab member" className="w-16 h-16 rounded-full object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG_fXIjMaBljnaD52gK8eSc50ApSqk3QmopquOHbbz44_7Nwyfsrac6xp3wWosFh0mZnJjAwaZofexFXMf9-xzzsyq1zv6b-8CU9NQY2q8TCfNQcmv-Uw7w_hxw6Ld5a7X0Bd8wrEpGBuCDpZdrQnNt5GAv1MWzL5pj1hDyAtZPiZb2Wni2tUd8oQvqWz-Xaw289YB-fa2COQ40Z1T7jZO0GjzWNUApfmLMQqXbcg4xCwAH0zjk1cwXkrJsGQkDvo24TqS2qveaF8" />
-                                <div>
-                                    <p className="font-bold">김민휘</p>
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">UX/UI디자인, 인공지능디자인, 사용자경험디자인</p>
-                                    <a className="text-xs underline break-all" href="mailto:alsgml0139@naver.com">alsgml0139@naver.com</a>
-                                </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                                {masterStudents.map((student, index) => (
+                                    <div key={index} className="flex items-center space-x-4">
+                                        <img
+                                            alt={`Portrait of ${student.name}`}
+                                            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                                            src={student.photo || 'https://via.placeholder.com/64'}
+                                        />
+                                        <div>
+                                            <p className="font-bold">{student.name}</p>
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{student.researchField}</p>
+                                            <a className="text-xs underline break-all" href={`mailto:${student.email}`}>{student.email}</a>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        )}
                     </div>
                 </section>
                 <section className="mb-32">
                     <div className="mb-16">
                         <h2 className="text-2xl font-bold mb-8">졸업생</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-10">
-                            <div className="flex items-center space-x-4">
-                                <img alt="Portrait of a lab member" className="w-16 h-16 rounded-full object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGv4utmqT8uFFVQKsBzlog0NQQUFPCWT5eYjfI-NdzhTVMU39Rjn8qOCBTwlijlsO3T7IGW9Ds2JmM-Pq5ors_7SF6H5nP65laL_KU3FcHJ_aNyGPc1bnUOJGwLAjjXxK-JtUyctQbduylonR3V7GxLU7YXb4sizLxRxesyrjtVlO_OQiFWyDWp3hUGgy1XovF-V89MdENeezB89ho2l_U04U6Y8WAdcjvoG63vRbf0evSOXfvD2j8oPdJfAOe_9XcdAOxzi0-IDE" />
-                                <div>
-                                    <p className="font-bold">조보민</p>
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">UX/UI디자인, 인터랙션디자인, 사용자 행동변화 디자인</p>
-                                    <a className="text-xs underline break-all" href="mailto:bloomytime@naver.com">bloomytime@naver.com</a>
-                                </div>
+                        {loading ? (
+                            <div className="text-center py-10">
+                                <p className="text-text-secondary-light dark:text-text-secondary-dark">로딩 중...</p>
                             </div>
-                            <div className="flex items-center space-x-4">
-                                <img alt="Portrait of a lab member" className="w-16 h-16 rounded-full object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmuOEb51nVyqau3pN0Dl1nU4BiLXBNf--HPtvNDiVr-Vzgcje5PYNdIOq8bNR5zMX6AjnbXwown2q11rWtIJhOijEVrguLleNEBP-M5GoPtQrxtSbFcs5DO2RkoeOfff_Q-N0T3wFJOmhJViFXGimcHuln23v_4fQXSNsjXGvBuwfOGFDUcEXlONaU43SK_TQ7LlLSbMbCgt2lueerkDqiVCiEYSow91HH3lQpkpUpkHsXlWpj0aePQ8OibH9AZjGDhvoIm0FN8FE" />
-                                <div>
-                                    <p className="font-bold">임은수</p>
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">UX/UI디자인, 인공지능 디자인, AR/VR디자인</p>
-                                    <a className="text-xs underline break-all" href="mailto:les0807@naver.com">les0807@naver.com</a>
-                                </div>
+                        ) : graduates.length === 0 ? (
+                            <div className="text-center py-10">
+                                <p className="text-text-secondary-light dark:text-text-secondary-dark">등록된 졸업생이 없습니다.</p>
                             </div>
-                            <div className="flex items-center space-x-4">
-                                <img alt="Portrait of a lab member" className="w-16 h-16 rounded-full object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG_fXIjMaBljnaD52gK8eSc50ApSqk3QmopquOHbbz44_7Nwyfsrac6xp3wWosFh0mZnJjAwaZofexFXMf9-xzzsyq1zv6b-8CU9NQY2q8TCfNQcmv-Uw7w_hxw6Ld5a7X0Bd8wrEpGBuCDpZdrQnNt5GAv1MWzL5pj1hDyAtZPiZb2Wni2tUd8oQvqWz-Xaw289YB-fa2COQ40Z1T7jZO0GjzWNUApfmLMQqXbcg4xCwAH0zjk1cwXkrJsGQkDvo24TqS2qveaF8" />
-                                <div>
-                                    <p className="font-bold">김민휘</p>
-                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">UX/UI디자인, 인공지능디자인, 사용자경험디자인</p>
-                                    <a className="text-xs underline break-all" href="mailto:alsgml0139@naver.com">alsgml0139@naver.com</a>
-                                </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                                {graduates.map((student, index) => (
+                                    <div key={index} className="flex items-center space-x-4">
+                                        <img
+                                            alt={`Portrait of ${student.name}`}
+                                            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                                            src={student.photo || 'https://via.placeholder.com/64'}
+                                        />
+                                        <div>
+                                            <p className="font-bold">{student.name}</p>
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{student.researchField}</p>
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{student.company}</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        )}
                     </div>
                 </section>
                 <section className="mb-32">
