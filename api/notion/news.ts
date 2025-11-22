@@ -4,11 +4,12 @@ interface NotionResponse {
   results: Array<{
     id: string;
     properties: {
-      이름: { title: Array<{ plain_text: string }> };
-      배경색: { rich_text: Array<{ plain_text: string }> };
+      제목: { title: Array<{ plain_text: string }> };
+      설명: { rich_text: Array<{ plain_text: string }> };
+      날짜: { date: { start: string } };
       대표이미지: { files: Array<{ file: { url: string } }> };
-      회사명: { rich_text: Array<{ plain_text: string }> };
-      시작일: { date: { start: string } };
+      링크: { rich_text: Array<{ plain_text: string }> };
+      태그: { multi_select: Array<{ name: string }> };
     };
   }>;
 }
@@ -37,7 +38,7 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const databaseId = process.env.PROJECT_LIST_DB || process.env.VITE_PROJECT_LIST_DB;
+  const databaseId = process.env.NEWS_LIST_DB || process.env.VITE_NEWS_LIST_DB;
   const token = process.env.DB_SECRETS || process.env.VITE_DB_SECRETS;
 
   if (!databaseId || !token) {
@@ -58,7 +59,7 @@ export default async function handler(
         body: JSON.stringify({
           sorts: [
             {
-              property: '시작일',
+              property: '날짜',
               direction: 'descending',
             },
           ],
@@ -76,18 +77,19 @@ export default async function handler(
 
     const data: NotionResponse = await response.json();
 
-    const projects = data.results.map((page) => ({
+    const news = data.results.map((page) => ({
       id: page.id,
-      title: page.properties.이름.title[0]?.plain_text || '',
-      backgroundColor: page.properties.배경색.rich_text[0]?.plain_text || 'FFFFFF',
-      image: page.properties.대표이미지.files[0]?.file.url || '',
-      company: page.properties.회사명.rich_text[0]?.plain_text || '',
-      startDate: page.properties.시작일.date?.start || '',
+      title: page.properties.제목.title[0]?.plain_text || '',
+      description: page.properties.설명.rich_text[0]?.plain_text || '',
+      date: page.properties.날짜.date?.start || '',
+      image: page.properties.대표이미지.files[0]?.file.url || null,
+      link: page.properties.링크.rich_text[0]?.plain_text || '',
+      tags: page.properties.태그.multi_select.map(tag => tag.name),
     }));
 
-    return res.status(200).json({ projects });
+    return res.status(200).json({ news });
   } catch (error) {
-    console.error('Failed to fetch projects:', error);
+    console.error('Failed to fetch news:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

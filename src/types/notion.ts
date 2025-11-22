@@ -75,4 +75,16 @@ export interface Project {
   title: string;
   image: string;
   backgroundColor: string;
+  company: string;
+  startDate: string;
+}
+
+export interface News {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  image: string | null;
+  link: string;
+  tags: string[];
 }

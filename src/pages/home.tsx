@@ -1,25 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { fetchMasterStudents, fetchGraduateStudents, fetchProjects } from '../api/notion';
-import type { MasterStudent, GraduateStudent, Project } from '../types/notion';
+import { fetchMasterStudents, fetchGraduateStudents, fetchProjects, fetchNews } from '../api/notion';
+import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion';
 import profImage from '../assets/image/prof.jpeg';
 
 const Home: React.FC = () => {
     const [masterStudents, setMasterStudents] = useState<MasterStudent[]>([]);
     const [graduates, setGraduates] = useState<GraduateStudent[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
+    const [news, setNews] = useState<News[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [students, grads, projs] = await Promise.all([
+                const [students, grads, projs, newsList] = await Promise.all([
                     fetchMasterStudents(),
                     fetchGraduateStudents(),
-                    fetchProjects()
+                    fetchProjects(),
+                    fetchNews()
                 ]);
                 setMasterStudents(students);
                 setGraduates(grads);
                 setProjects(projs);
+                setNews(newsList);
             } catch (error) {
                 console.error('Failed to load data:', error);
             } finally {
@@ -52,7 +55,7 @@ const Home: React.FC = () => {
                                 <section className="mb-32">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         <div className="flex flex-col items-center md:items-start">
-                            <img alt="Portrait of Professor Shin Hye-Ryeon" className="w-48 h-48 rounded-full object-cover" src={profImage} />
+                            <img alt="Portrait of Professor Shin Hye-Ryeon" className="w-48 h-48 rounded-full object-cover select-none" src={profImage} draggable="false" />
                             <h2 className="text-lg font-bold mt-4">신혜련 교수 (부교수)</h2>
                             <a className="text-sm underline" href="mailto:worksmju@mju.ac.kr">worksmju@mju.ac.kr</a>
                         </div>
@@ -140,17 +143,22 @@ const Home: React.FC = () => {
                                 {projects.map((project, index) => (
                                     <div 
                                         key={project.id} 
-                                        className={`h-[400px] relative overflow-hidden ${
+                                        className={`h-[400px] relative overflow-hidden group ${
                                             projects.length % 2 !== 0 && index === projects.length - 1 ? 'md:col-span-2' : ''
                                         }`}
                                         style={{ backgroundColor: project.backgroundColor.startsWith('#') ? project.backgroundColor : `#${project.backgroundColor}` }}
                                     >
-                                        <div className="absolute inset-[30px] flex items-center justify-center">
+                                        <div className="absolute inset-[30px] flex items-center justify-center transition-transform duration-300 group-hover:scale-[0.8]">
                                             <img 
                                                 src={project.image} 
                                                 alt={project.title} 
-                                                className="max-w-full max-h-full object-contain"
+                                                className="max-w-full max-h-full object-contain select-none"
+                                                draggable="false"
                                             />
+                                        </div>
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white p-4 text-center">
+                                            <h3 className="text-2xl font-bold mb-2">{project.title}</h3>
+                                            <p className="text-lg">{project.company}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -175,12 +183,13 @@ const Home: React.FC = () => {
                                     <div key={index} className="flex items-center space-x-4">
                                         <img
                                             alt={`Portrait of ${student.name}`}
-                                            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                                            className="w-16 h-16 rounded-full object-cover flex-shrink-0 select-none"
                                             src={student.photo || 'https://via.placeholder.com/64'}
+                                            draggable="false"
                                         />
                                         <div>
                                             <p className="font-bold">{student.name}</p>
-                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{student.researchField}</p>
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark line-clamp-1 whitespace-pre-wrap">{student.researchField}</p>
                                             <a className="text-xs underline break-all" href={`mailto:${student.email}`}>{student.email}</a>
                                         </div>
                                     </div>
@@ -206,12 +215,13 @@ const Home: React.FC = () => {
                                     <div key={index} className="flex items-center space-x-4">
                                         <img
                                             alt={`Portrait of ${student.name}`}
-                                            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                                            className="w-16 h-16 rounded-full object-cover flex-shrink-0 select-none"
                                             src={student.photo || 'https://via.placeholder.com/64'}
+                                            draggable="false"
                                         />
                                         <div>
                                             <p className="font-bold">{student.name}</p>
-                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{student.researchField}</p>
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark line-clamp-1 whitespace-pre-wrap">{student.researchField}</p>
                                             <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">{student.company}</p>
                                         </div>
                                     </div>
@@ -221,76 +231,56 @@ const Home: React.FC = () => {
                     </div>
                 </section>
                 <section className="mb-32">
-                    <h2 className="text-2xl font-bold mb-8">저널 Journal Articles (최근)</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                        <div className="border-t border-border-light dark:border-border-dark pt-4">
-                            <a className="font-bold underline" href="#">AI 챗봇 페르소나 유형이 사용자 경험에 미치는 영향 (2025)</a>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">한국디자인트렌드학회</p>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">이혜인, 윤재영</p>
+                    <h2 className="text-2xl font-bold mb-8">DCD Lab News</h2>
+                    {loading ? (
+                        <div className="text-center py-10">
+                            <p className="text-text-secondary-light dark:text-text-secondary-dark">로딩 중...</p>
                         </div>
-                        <div className="border-t border-border-light dark:border-border-dark pt-4">
-                            <a className="font-bold underline" href="#">유튜브 유료광고 표시에 대한 인지가 사용자 경험에 미치는 영향 - 20, 30대 여성 사용자를 중심으로(2024)</a>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">한국디자인트렌드학회</p>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">이슬기, 윤재영, 나재휘, 신영미, 이은진</p>
+                    ) : news.length === 0 ? (
+                        <div className="text-center py-10">
+                            <p className="text-text-secondary-light dark:text-text-secondary-dark">등록된 소식이 없습니다.</p>
                         </div>
-                        <div className="border-t border-border-light dark:border-border-dark pt-4">
-                            <a className="font-bold underline" href="#">불편한 디지털치료기기(DTx)의 초기 사용자 경험 개선에 대한 연구 (2024)</a>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">한국디자인문화학회</p>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">김혜수, 장순규, 윤재영</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                            {news.map((item) => (
+                                <div key={item.id} className="flex items-start space-x-4">
+                                    {item.image && (
+                                        <img 
+                                            alt="News thumbnail" 
+                                            className="w-24 h-16 object-cover bg-gray-200 flex-shrink-0 select-none" 
+                                            src={item.image} 
+                                            draggable="false"
+                                        />
+                                    )}
+                                    <div>
+                                        <a 
+                                            className="font-bold underline block mb-1" 
+                                            href={item.link} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                        >
+                                            {item.title}
+                                        </a>
+                                        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-1 line-clamp-1 whitespace-pre-wrap">
+                                            {item.description}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2 text-xs text-text-secondary-light dark:text-text-secondary-dark">
+                                            <span>{item.date}</span>
+                                            {item.tags.map(tag => (
+                                                <span key={tag} className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                        <div className="border-t border-border-light dark:border-border-dark pt-4">
-                            <a className="font-bold underline" href="#">사회초년생의 전세사기 예방을 위한 모바일 서비스 제안 (2024)</a>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">한국디자인리서치학회</p>
-                            <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">김민휘, 정유진, 조계홍, 안보영, 박지원, 윤재영</p>
-                        </div>
-                    </div>
+                    )}
                     <div className="mt-8">
                         <button className="flex items-center space-x-1 font-medium text-sm hover:underline">
                             <span className="material-symbols-outlined text-base">add</span>
-                            <span>이전 저널 논문 더보기</span>
-                        </button>
-                    </div>
-                </section>
-                <section className="mb-32">
-                    <h2 className="text-2xl font-bold mb-8">디자인어워드 Design Awards (최근)</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                        <div className="flex items-start space-x-4">
-                            <img alt="Award image" className="w-24 h-16 object-cover bg-gray-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJRGc5Wmf-GBuU1q7-fgFBr5IHJ42EgLsrfFpO4OKDxq_OYASe1vvEf9e_Iz6mINnWrVa6Npd8TLTXo0JPzCUqKbh_005DvcTdxMsBDBVRA0QMxa-FV5oR0ojJVBTABzoMGpt65CIYcuvHQMVPS3WiLsE6-2bHa79KezNRZEaWphwvm9PuNv_8ByozA87BgggLlZ3ehFbWI9efWyvnXUJ1Qq_7dEuMbPiL5-jMFdep9TiheLlhIrEWstA3TUPSOASlYWppr3-X9R4" />
-                            <div>
-                                <a className="font-bold underline" href="#">AI 챗봇의 애정 표현에 대한 사용자 경험 연구 (2025)</a>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">한국HCI학회 학술대회 우수논문상</p>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">이채윤, 박지원, 소유진, 성진우, 정유진, 윤재영</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4">
-                            <img alt="Award image" className="w-24 h-16 object-cover bg-gray-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdscFrBt8IJueZoVeF-80Xrc8UpcPwQZa9zOjLE3Tl_NJfnFbhij2Jh_bODNYb8CM6IkBvvIUhJgVRtn3kQvftxuA2nAsddZJkR4BO9axJ5dewuDEl9tIUwA1198FKGGlzq-XedrHjSI921_TVHnLmP3zgRDBWZO-Skldgb48JXhwjBH6dlkOOFki25BE1vZ_CciiwBJpyZmWKI7JV3aVJo0P__1eQRKssN22COfQDgUz2Xlw1reKnbggqAcwz70jOF0zAUJn6bH4" />
-                            <div>
-                                <a className="font-bold underline" href="#">다크패턴 디자인인 것을 감지하고 방향성을 제시하는 플러그인 (2024)</a>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">대학생디자인학술대회(DSUS)장려상</p>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">백송주, 황수빈, 안소은, 정나영, 윤가빈</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4">
-                            <img alt="Award image" className="w-24 h-16 object-cover bg-gray-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjmhzPjC1UQ2y-4i-dINOV-4IsGhWEGNysazNrokK5noeCaZebERjm2aVFcxeTyu2iOnHpYIKy5xeUbHIE9DMX4YhjepELXMAP-VJ5kEiByHfnYcjFSZ1_z2o-U200783H9zc4A8FdQxDLsr_Sr59zaSFDRjdsgwnszHZYyilMTHVaCeHM-mP1jwoKtHl96BMF3LnWMofbwLAJSK-rTyqGytcvC5cbpDp__C7YAzTFnpf4l8XmAb91MFgQJ4KDexAACKzheGh12A" />
-                            <div>
-                                <a className="font-bold underline" href="#">인간 중심 너비의 디자인 (2024)</a>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">한국디자인학회 국제초대전 대상</p>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">이승규</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4">
-                            <img alt="Award image" className="w-24 h-16 object-cover bg-gray-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARQhHlIALN8jPBYW5AnkKTgtYMHt2f71hMSkgThB9bKKTYNCIdj2cScEIYwHjrGvSlXVP4_m6DZBbJ7apx1Ij3zw9VdIKd6i_OoEAYTxvWRG3bqd2N_3zBeU992xuK1JIpoFwCvnzukTIr90E0fiDfWiVxZ6pQqJ5AgvJOKUJFZ4gaBSxNRjkCAC70XSYzarc7tQYyg0nmptRG6fQ8XCHW_T-Z4T-PsjpeqTdNbx1-JX4U3KZzF_7dn3uiCSoESQFT7AOHtymxJH4" />
-                            <div>
-                                <a className="font-bold underline" href="#">구독 해지 과정의 복잡성 정도에 따른 사용자 경험 연구 (2023)</a>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Archives of Design Research 최우수논문상(1등)</p>
-                                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">조보민, 오선영, 이지영, 김은지, 윤재영</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mt-8">
-                        <button className="flex items-center space-x-1 font-medium text-sm hover:underline">
-                            <span className="material-symbols-outlined text-base">add</span>
-                            <span>이전 디자인 어워드 더보기</span>
+                            <span>이전 소식 더보기</span>
                         </button>
                     </div>
                 </section>
