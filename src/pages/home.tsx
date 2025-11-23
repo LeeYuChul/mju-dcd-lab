@@ -3,14 +3,25 @@ import { fetchMasterStudents, fetchGraduateStudents, fetchProjects, fetchNews } 
 import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion';
 import profImage from '../assets/image/prof.jpeg';
 
-const Home: React.FC = () => {
-    const [masterStudents, setMasterStudents] = useState<MasterStudent[]>([]);
-    const [graduates, setGraduates] = useState<GraduateStudent[]>([]);
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [news, setNews] = useState<News[]>([]);
-    const [loading, setLoading] = useState(true);
+interface HomeProps {
+    initialData?: {
+        masterStudents: MasterStudent[];
+        graduates: GraduateStudent[];
+        projects: Project[];
+        news: News[];
+    };
+}
+
+const Home: React.FC<HomeProps> = ({ initialData }) => {
+    const [masterStudents, setMasterStudents] = useState<MasterStudent[]>(initialData?.masterStudents || []);
+    const [graduates, setGraduates] = useState<GraduateStudent[]>(initialData?.graduates || []);
+    const [projects, setProjects] = useState<Project[]>(initialData?.projects || []);
+    const [news, setNews] = useState<News[]>(initialData?.news || []);
+    const [loading, setLoading] = useState(!initialData);
 
     useEffect(() => {
+        if (initialData) return;
+
         const loadData = async () => {
             try {
                 const [students, grads, projs, newsList] = await Promise.all([
@@ -31,7 +42,7 @@ const Home: React.FC = () => {
         };
 
         loadData();
-    }, []);
+    }, [initialData]);
 
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
