@@ -1,18 +1,23 @@
 import PixelCard from '../components/PixelCard';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 interface LoadingProps {
   progress?: number;
 }
 
 export default function Loading({ progress = 0 }: LoadingProps) {
+  useEffect(() => {
+    document.title = "DCD Lab - Loading";
+  }, []);
+
   return (
-    <motion.div 
+    <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black"
       exit={{ backgroundColor: "rgba(0,0,0,0)" }}
       transition={{ duration: 0.8 }}
     >
-      <motion.div 
+      <motion.div
         className="absolute inset-0 w-full h-full"
         exit={{ opacity: 0 }}
         transition={{ duration: 0.8 }}
@@ -27,15 +32,15 @@ export default function Loading({ progress = 0 }: LoadingProps) {
           progress={progress}
         />
       </motion.div>
-      
+
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-         <motion.h1 
-           layoutId="dcd-lab-title"
-           className="text-4xl font-bold text-white"
-           transition={{ duration: 0.8, ease: "circOut" }}
-         >
-           DCD Lab
-         </motion.h1>
+        <motion.h1
+          layoutId="dcd-lab-title"
+          className="text-4xl font-bold text-white"
+          transition={{ duration: 0.8, ease: "circOut" }}
+        >
+          DCD Lab
+        </motion.h1>
       </div>
     </motion.div>
   );

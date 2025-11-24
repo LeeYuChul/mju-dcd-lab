@@ -5,6 +5,8 @@ import profImage from '../assets/image/prof.jpeg';
 import LoadingScreen from './loading';
 import { getDataPromise } from '../utils/data';
 import { AnimatePresence, motion } from 'framer-motion';
+import Lottie from 'lottie-react';
+import scrollDownAnimation from '../assets/animation/ScrollDown.json';
 
 interface HomeProps {
     initialData?: {
@@ -16,18 +18,18 @@ interface HomeProps {
 }
 
 const FadeInSection = ({ children, className, id }: { children: React.ReactNode, className?: string, id?: string }) => {
-  return (
-    <motion.section
-      id={id}
-      className={className}
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
-      {children}
-    </motion.section>
-  );
+    return (
+        <motion.section
+            id={id}
+            className={className}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+            {children}
+        </motion.section>
+    );
 };
 
 const Home: React.FC<HomeProps> = ({ initialData }) => {
@@ -41,14 +43,22 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
     const [progress, setProgress] = useState(0);
     const progressRef = useRef(0);
     const [showNavbar, setShowNavbar] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        setIsMounted(true);
         const handleScroll = () => {
             setShowNavbar(window.scrollY > 50);
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    useEffect(() => {
+        if (!showLoading) {
+            document.title = "DCD Lab - Home";
+        }
+    }, [showLoading]);
 
     const scrollToSection = (id: string) => {
         const element = document.getElementById(id);
@@ -58,7 +68,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
             const elementRect = element.getBoundingClientRect().top;
             const elementPosition = elementRect - bodyRect;
             const offsetPosition = elementPosition - offset;
-    
+
             window.scrollTo({
                 top: offsetPosition,
                 behavior: 'smooth'
@@ -212,8 +222,8 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                     <p className="text-4xl mt-2 text-text-light dark:text-text-dark">Design Convergence and Digital media</p>
                 </section>
                 <div className="flex justify-center mb-24">
-                    <div className="w-6 h-10 border-2 border-text-secondary-light dark:border-text-secondary-dark rounded-full relative">
-                        <div className="w-1 h-2 bg-text-secondary-light dark:bg-text-secondary-dark rounded-full absolute top-2 left-1/2 -translate-x-1/2 animate-bounce"></div>
+                    <div className="w-[72px] h-[120px]">
+                        {isMounted && <Lottie animationData={scrollDownAnimation} loop={true} className="w-full h-full dark:invert" />}
                     </div>
                 </div>
                 <FadeInSection className="max-w-4xl mx-auto mb-24 text-base leading-relaxed space-y-6">
