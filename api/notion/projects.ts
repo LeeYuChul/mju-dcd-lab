@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getProjects } from '../../src/services/notion';
+import { getProjects } from '../_lib/notion';
 
 export default async function handler(
   req: VercelRequest,

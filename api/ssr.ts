@@ -34,16 +34,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // @ts-ignore
     const { render } = await import(pathToFileURL(path.join(distServer, 'entry-server.js')).href);
     
-    const { html: appHtml } = await render();
+    const { html: appHtml, initialData } = await render();
     
     let html = template.replace(`<!--app-html-->`, appHtml);
     
-    // JSON 데이터 노출 방지를 위해 데이터 주입 스크립트 제거
-    html = html.replace(/<script>\s*window\.__INITIAL_DATA__\s*=\s*<!--app-data-->\s*<\/script>/g, '');
-    
-    // 클라이언트 측 Hydration 방지를 위해 JS 모듈 스크립트 제거 (순수 HTML/CSS만 제공)
-    html = html.replace(/<script type="module".*?<\/script>/g, '');
-    html = html.replace(/<link rel="modulepreload".*?>/g, '');
+    // Inject initial data if available
+    if (initialData) {
+      const jsonStr = JSON.stringify(initialData);
+      const base64Str = Buffer.from(jsonStr).toString('base64');
+      html = html.replace(
+        `<!--app-data-->`,
+        `<script>window.__INITIAL_DATA__=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob("${base64Str}"),c=>c.charCodeAt(0))))</script>`
+      );
+    }
       
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(html);

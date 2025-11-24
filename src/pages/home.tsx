@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { fetchMasterStudents, fetchGraduateStudents, fetchProjects, fetchNews } from '../api/notion';
 import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion';
 import profImage from '../assets/image/prof.jpeg';
+import LoadingScreen from './loading';
+import { getDataPromise } from '../utils/data';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface HomeProps {
     initialData?: {
@@ -12,6 +15,21 @@ interface HomeProps {
     };
 }
 
+const FadeInSection = ({ children, className, id }: { children: React.ReactNode, className?: string, id?: string }) => {
+  return (
+    <motion.section
+      id={id}
+      className={className}
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      {children}
+    </motion.section>
+  );
+};
+
 const Home: React.FC<HomeProps> = ({ initialData }) => {
     const [masterStudents, setMasterStudents] = useState<MasterStudent[]>(initialData?.masterStudents || []);
     const [graduates, setGraduates] = useState<GraduateStudent[]>(initialData?.graduates || []);
@@ -19,40 +37,178 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
     const [news, setNews] = useState<News[]>(initialData?.news || []);
     const [loading, setLoading] = useState(!initialData);
 
-    useEffect(() => {
-        if (initialData) return;
+    const [showLoading, setShowLoading] = useState(true);
+    const [progress, setProgress] = useState(0);
+    const progressRef = useRef(0);
+    const [showNavbar, setShowNavbar] = useState(false);
 
-        const loadData = async () => {
-            try {
-                const [students, grads, projs, newsList] = await Promise.all([
-                    fetchMasterStudents(),
-                    fetchGraduateStudents(),
-                    fetchProjects(),
-                    fetchNews()
-                ]);
-                setMasterStudents(students);
-                setGraduates(grads);
-                setProjects(projs);
-                setNews(newsList);
-            } catch (error) {
-                console.error('Failed to load data:', error);
-            } finally {
-                setLoading(false);
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowNavbar(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToSection = (id: string) => {
+        const element = document.getElementById(id);
+        if (element) {
+            const offset = 80;
+            const bodyRect = document.body.getBoundingClientRect().top;
+            const elementRect = element.getBoundingClientRect().top;
+            const elementPosition = elementRect - bodyRect;
+            const offsetPosition = elementPosition - offset;
+    
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    useEffect(() => {
+        // Progress animation logic
+        let startTime = Date.now();
+        let animationFrame: number;
+        let isDataReady = !!initialData;
+
+        const animate = () => {
+            const now = Date.now();
+            const elapsed = now - startTime;
+
+            if (isDataReady) {
+                // Data is ready, accelerate to 100%
+                const next = Math.min(100, progressRef.current + 2);
+                progressRef.current = next;
+                setProgress(next);
+            } else {
+                // Data not ready
+                // 0~2s: 0~90%
+                if (elapsed < 2000) {
+                    const target = (elapsed / 2000) * 90;
+                    progressRef.current = target;
+                    setProgress(target);
+                } else {
+                    // > 2s: Stay at 90%
+                    progressRef.current = 90;
+                    setProgress(90);
+                }
+            }
+
+            if (progressRef.current < 100) {
+                animationFrame = requestAnimationFrame(animate);
+            } else {
+                // Finished
+                setTimeout(() => setShowLoading(false), 500); // Small delay before hiding
             }
         };
 
-        loadData();
-    }, [initialData]);
+        animationFrame = requestAnimationFrame(animate);
+
+        // Check for data if not present
+        if (!initialData) {
+            const promise = getDataPromise();
+            if (promise) {
+                promise.then((data: any) => {
+                    if (data) {
+                        setMasterStudents(data.masterStudents || []);
+                        setGraduates(data.graduates || []);
+                        setProjects(data.projects || []);
+                        setNews(data.news || []);
+                        setLoading(false);
+                        isDataReady = true;
+                    } else {
+                        // Data promise timed out, fallback to API calls
+                        performFallbackFetch();
+                    }
+                }).catch(() => {
+                    // Promise failed, fallback to API calls
+                    performFallbackFetch();
+                });
+            } else {
+                // No promise available, fallback to API calls
+                performFallbackFetch();
+            }
+        } else {
+            isDataReady = true;
+        }
+
+        function performFallbackFetch() {
+            const loadData = async () => {
+                try {
+                    const [students, grads, projs, newsList] = await Promise.all([
+                        fetchMasterStudents(),
+                        fetchGraduateStudents(),
+                        fetchProjects(),
+                        fetchNews()
+                    ]);
+                    setMasterStudents(students);
+                    setGraduates(grads);
+                    setProjects(projs);
+                    setNews(newsList);
+                    isDataReady = true;
+                } catch (error) {
+                    console.error('Failed to load data:', error);
+                    // Even if failed, we should finish loading
+                    isDataReady = true;
+                } finally {
+                    setLoading(false);
+                }
+            };
+            loadData();
+        }
+
+        return () => cancelAnimationFrame(animationFrame);
+    }, [initialData]); // Run once on mount
 
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <AnimatePresence>
+                {showLoading && (
+                    <LoadingScreen progress={progress} key="loading" />
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showNavbar && (
+                    <motion.nav
+                        initial={{ y: -100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -100, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16 flex items-center justify-center"
+                    >
+                        <div className="max-w-6xl w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+                            <div className="font-bold text-xl cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>DCD Lab</div>
+                            <div className="flex space-x-6 text-sm font-medium">
+                                <button onClick={() => scrollToSection('projects')} className="hover:text-primary transition-colors">Project</button>
+                                <button onClick={() => scrollToSection('members')} className="hover:text-primary transition-colors">Member</button>
+                                <button onClick={() => scrollToSection('news')} className="hover:text-primary transition-colors">News</button>
+                            </div>
+                        </div>
+                    </motion.nav>
+                )}
+            </AnimatePresence>
+
             <header className="text-right text-sm text-text-secondary-light dark:text-text-secondary-dark space-y-2 mb-20">
                 <p>명지대학교 인공지능·소프트웨어 융합대학<br />디지털콘텐츠디자인학과 DCD Lab</p>
                 <p>서울특별시 서대문구 거북골로 34, 명지대학교 인문캠퍼스 종합관 S1803</p>
             </header>
             <main>
                 <section className="mb-24">
-                    <h1 className="text-8xl font-bold text-primary dark:text-white">DCD Lab</h1>
+                    {showLoading ? (
+                        // Placeholder to keep layout stable or hidden
+                        <div className="h-24" />
+                    ) : (
+                        <motion.h1
+                            layoutId="dcd-lab-title"
+                            className="text-8xl font-bold text-primary dark:text-white"
+                            transition={{ duration: 0.8, ease: "circOut" }}
+                            layout
+                        >
+                            DCD Lab
+                        </motion.h1>
+                    )}
                     <p className="text-4xl mt-2 text-text-light dark:text-text-dark">Design Convergence and Digital media</p>
                 </section>
                 <div className="flex justify-center mb-24">
@@ -60,10 +216,10 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                         <div className="w-1 h-2 bg-text-secondary-light dark:bg-text-secondary-dark rounded-full absolute top-2 left-1/2 -translate-x-1/2 animate-bounce"></div>
                     </div>
                 </div>
-                <section className="max-w-4xl mx-auto mb-24 text-base leading-relaxed space-y-6">
+                <FadeInSection className="max-w-4xl mx-auto mb-24 text-base leading-relaxed space-y-6">
                     <p>명지대학교 DCD 랩은 Design Convergence and Digital media의 약자로 '사람들에게 좋은 경험을 제공할 수 있도록 깊이 연구하여 좋은 디자인을 만들겠다' 라는 바램과 가치관이 담겨있습니다. DCD 랩에서 집중하고 있는 연구분야로는 면밀한 사용자 조사를 기반으로 한 UX·UI 연구, 사용자의 행동을 유도하고 기만하는 Persuasive 디자인 연구, 수집된 데이터를 시각화하여 인사이트를 제공하는 Data Visualization 연구, 인공지능 솔루션을 효과적으로 사용할 수 있도록 도와주는 AI Interaction Design 연구 등으로 구성되어 있습니다.</p>
-                </section>
-                                <section className="mb-32">
+                </FadeInSection>
+                <FadeInSection className="mb-32">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         <div className="flex flex-col items-center md:items-start">
                             <img alt="Portrait of Professor Shin Hye-Ryeon" className="w-48 h-48 rounded-full object-cover select-none" src={profImage} draggable="false" />
@@ -98,9 +254,9 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             </div>
                         </div>
                     </div>
-                </section>
+                </FadeInSection>
 
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12 mb-32">
+                <FadeInSection className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12 mb-32">
                     <div>
                         <h3 className="text-lg font-bold">UX·UI·인터랙션 디자인</h3>
                         <p className="text-lg text-text-secondary-light dark:text-text-secondary-dark">User Experience·Interface·Interaction Design</p>
@@ -137,8 +293,8 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             <li>통일부 DMZ 지도 시각화 프로젝트 (2019-2020)</li>
                         </ul>
                     </div>
-                </section>
-                <section className="mb-32">
+                </FadeInSection>
+                <FadeInSection className="mb-32" id="projects">
                     <div className="mb-0">
                         <h2 className="text-2xl font-bold mb-8">프로젝트</h2>
                         {loading ? (
@@ -152,17 +308,16 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                                 {projects.map((project, index) => (
-                                    <div 
-                                        key={project.id} 
-                                        className={`h-[400px] relative overflow-hidden group ${
-                                            projects.length % 2 !== 0 && index === projects.length - 1 ? 'md:col-span-2' : ''
-                                        }`}
+                                    <div
+                                        key={project.id}
+                                        className={`h-[400px] relative overflow-hidden group ${projects.length % 2 !== 0 && index === projects.length - 1 ? 'md:col-span-2' : ''
+                                            }`}
                                         style={{ backgroundColor: project.backgroundColor.startsWith('#') ? project.backgroundColor : `#${project.backgroundColor}` }}
                                     >
                                         <div className="absolute inset-[30px] flex items-center justify-center transition-transform duration-300 group-hover:scale-[0.8]">
-                                            <img 
-                                                src={project.image} 
-                                                alt={project.title} 
+                                            <img
+                                                src={project.image}
+                                                alt={project.title}
                                                 className="max-w-full max-h-full object-contain select-none"
                                                 draggable="false"
                                             />
@@ -176,8 +331,8 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             </div>
                         )}
                     </div>
-                </section>
-                <section className="mb-32">
+                </FadeInSection>
+                <FadeInSection className="mb-32" id="members">
                     <div className="mb-16">
                         <h2 className="text-2xl font-bold mb-8">석사과정 연구원</h2>
                         {loading ? (
@@ -208,8 +363,8 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             </div>
                         )}
                     </div>
-                </section>
-                <section className="mb-32">
+                </FadeInSection>
+                <FadeInSection className="mb-32">
                     <div className="mb-16">
                         <h2 className="text-2xl font-bold mb-8">졸업생</h2>
                         {loading ? (
@@ -240,8 +395,8 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             </div>
                         )}
                     </div>
-                </section>
-                <section className="mb-32">
+                </FadeInSection>
+                <FadeInSection className="mb-32" id="news">
                     <h2 className="text-2xl font-bold mb-8">DCD Lab News</h2>
                     {loading ? (
                         <div className="text-center py-10">
@@ -256,18 +411,18 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             {news.map((item) => (
                                 <div key={item.id} className="flex items-start space-x-4">
                                     {item.image && (
-                                        <img 
-                                            alt="News thumbnail" 
-                                            className="w-24 h-16 object-cover bg-gray-200 flex-shrink-0 select-none" 
-                                            src={item.image} 
+                                        <img
+                                            alt="News thumbnail"
+                                            className="w-24 h-16 object-cover bg-gray-200 flex-shrink-0 select-none"
+                                            src={item.image}
                                             draggable="false"
                                         />
                                     )}
                                     <div>
-                                        <a 
-                                            className="font-bold underline block mb-1" 
-                                            href={item.link} 
-                                            target="_blank" 
+                                        <a
+                                            className="font-bold underline block mb-1"
+                                            href={item.link}
+                                            target="_blank"
                                             rel="noopener noreferrer"
                                         >
                                             {item.title}
@@ -294,13 +449,13 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             <span>이전 소식 더보기</span>
                         </button>
                     </div>
-                </section>
-                <section className="text-center mb-16">
+                </FadeInSection>
+                <FadeInSection className="text-center mb-16">
                     <a className="inline-flex items-center space-x-2 text-lg font-medium group" href="#">
                         <span>DCD Lab 소식 보러 가기</span>
                         <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
                     </a>
-                </section>
+                </FadeInSection>
             </main>
             <footer className="bg-primary dark:bg-black py-6">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
