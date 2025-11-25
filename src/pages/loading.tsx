@@ -8,7 +8,7 @@ interface LoadingProps {
 
 export default function Loading({ progress = 0 }: LoadingProps) {
   useEffect(() => {
-    document.title = "DCD Lab - Loading";
+    document.title = "Core Loop Lab - Loading";
   }, []);
 
   return (
@@ -39,7 +39,7 @@ export default function Loading({ progress = 0 }: LoadingProps) {
           className="text-4xl font-bold text-white"
           transition={{ duration: 0.8, ease: "circOut" }}
         >
-          DCD Lab
+          Core Loop Lab
         </motion.h1>
       </div>
     </motion.div>

@@ -56,7 +56,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
 
     useEffect(() => {
         if (!showLoading) {
-            document.title = "DCD Lab - Home";
+            document.title = "Core Loop Lab - Home";
         }
     }, [showLoading]);
 
@@ -189,7 +189,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                         className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 h-16 flex items-center justify-center"
                     >
                         <div className="max-w-6xl w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-                            <div className="font-bold text-xl cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>DCD Lab</div>
+                            <div className="font-bold text-xl cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Core Loop Lab</div>
                             <div className="flex space-x-6 text-sm font-medium">
                                 <button onClick={() => scrollToSection('projects')} className="hover:text-primary transition-colors">Project</button>
                                 <button onClick={() => scrollToSection('members')} className="hover:text-primary transition-colors">Member</button>
@@ -201,7 +201,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
             </AnimatePresence>
 
             <header className="text-right text-sm text-text-secondary-light dark:text-text-secondary-dark space-y-2 mb-20">
-                <p>명지대학교 인공지능·소프트웨어 융합대학<br />디지털콘텐츠디자인학과 DCD Lab</p>
+                <p>명지대학교 인공지능·소프트웨어 융합대학<br />디지털콘텐츠디자인학과 Core Loop Lab</p>
                 <p>서울특별시 서대문구 거북골로 34, 명지대학교 인문캠퍼스 종합관 S1803</p>
             </header>
             <main>
@@ -216,7 +216,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                             transition={{ duration: 0.8, ease: "circOut" }}
                             layout
                         >
-                            DCD Lab
+                            Core Loop Lab
                         </motion.h1>
                     )}
                     <p className="text-4xl mt-2 text-text-light dark:text-text-dark">Design Convergence and Digital media</p>
@@ -407,7 +407,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                     </div>
                 </FadeInSection>
                 <FadeInSection className="mb-32" id="news">
-                    <h2 className="text-2xl font-bold mb-8">DCD Lab News</h2>
+                    <h2 className="text-2xl font-bold mb-8">Core Loop Lab News</h2>
                     {loading ? (
                         <div className="text-center py-10">
                             <p className="text-text-secondary-light dark:text-text-secondary-dark">로딩 중...</p>
@@ -462,14 +462,14 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                 </FadeInSection>
                 <FadeInSection className="text-center mb-16">
                     <a className="inline-flex items-center space-x-2 text-lg font-medium group" href="#">
-                        <span>DCD Lab 소식 보러 가기</span>
+                        <span>Core Loop Lab 소식 보러 가기</span>
                         <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
                     </a>
                 </FadeInSection>
             </main>
             <footer className="bg-primary dark:bg-black py-6">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <p className="text-center text-xs text-gray-400">Copyright © 2025 Myongji University DCD laboratory</p>
+                    <p className="text-center text-xs text-gray-400">Copyright © 2025 Myongji University Core Loop Laboratory</p>
                 </div>
             </footer>
         </div>

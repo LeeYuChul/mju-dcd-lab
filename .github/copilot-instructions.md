@@ -1,4 +1,4 @@
-# DCD Lab 홈페이지 프로젝트
+# Core Loop Lab 홈페이지 프로젝트
 
 React + TypeScript + Vite 기반의 단일 페이지 홈페이지 프로젝트입니다.
 
