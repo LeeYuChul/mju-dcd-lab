@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getGraduateStudents } from '../_lib/notion';
+import { getGraduateStudents } from '../_lib/notion.js';
 
 export default async function handler(
   req: VercelRequest,

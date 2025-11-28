@@ -1,0 +1,7 @@
+export { Header } from './Header'
+export { MissionStatement } from './MissionStatement'
+export { ImageGallery } from './ImageGallery'
+export { ActivitiesSection } from './ActivitiesSection'
+export { ResearchSection } from './ResearchSection'
+export { TeamSection } from './TeamSection'
+export { ContactSection } from './ContactSection'

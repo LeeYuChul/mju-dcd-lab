@@ -1,6 +1,8 @@
 import PixelCard from '../components/PixelCard';
+import ShinyText from '../components/ShinyText';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
+
 
 interface LoadingProps {
   progress?: number;
@@ -34,13 +36,12 @@ export default function Loading({ progress = 0 }: LoadingProps) {
       </motion.div>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <motion.h1
+        <motion.div
           layoutId="dcd-lab-title"
-          className="text-4xl font-bold text-white"
           transition={{ duration: 0.8, ease: "circOut" }}
         >
-          Core Loop Lab
-        </motion.h1>
+          <ShinyText text="Core Loop Lab" speed={3} className="text-4xl font-bold" />
+        </motion.div>
       </div>
     </motion.div>
   );

@@ -1,4 +1,4 @@
-import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion';
+import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion.js';
 
 interface NotionResponse {
   results: Array<any>;
@@ -40,7 +40,6 @@ export const getMasterStudents = async (): Promise<MasterStudent[]> => {
 
     const students = data.results.map((page) => ({
       name: page.properties.이름.title[0]?.plain_text || '',
-      email: page.properties.이메일.rich_text[0]?.plain_text || '',
       researchField: page.properties.연구분야.rich_text[0]?.plain_text || '',
       photo: page.properties.사진.files[0]?.file.url || '',
       year: page.properties.입학년도.number || 0,
@@ -93,13 +92,14 @@ export const getGraduateStudents = async (): Promise<GraduateStudent[]> => {
       name: page.properties.이름.title[0]?.plain_text || '',
       company: page.properties.회사.rich_text[0]?.plain_text || '',
       researchField: page.properties.연구분야.rich_text[0]?.plain_text || '',
+      department: page.properties.학과.rich_text[0]?.plain_text || '',
       photo: page.properties.사진.files[0]?.file.url || '',
-      year: page.properties.입학년도.number || 0,
+      graduationYear: page.properties.졸업년도.number || 0,
     }));
 
     graduates.sort((a, b) => {
-      if (a.year !== b.year) {
-        return a.year - b.year;
+      if (a.graduationYear !== b.graduationYear) {
+        return a.graduationYear - b.graduationYear;
       }
       return a.name.localeCompare(b.name, 'ko-KR');
     });
