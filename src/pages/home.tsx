@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { fetchMasterStudents, fetchGraduateStudents, fetchProjects, fetchNews } from '../api/notion';
-import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion';
+import { fetchMasterStudents, fetchGraduateStudents, fetchProjects, fetchNews, fetchProfessors } from '../api/notion';
+import type { MasterStudent, GraduateStudent, Project, News, Professor } from '../types/notion';
 import LoadingScreen from './loading';
 import { getDataPromise } from '../utils/data';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -21,6 +21,7 @@ interface HomeProps {
         graduates: GraduateStudent[];
         projects: Project[];
         news: News[];
+        professors: Professor[];
     };
 }
 
@@ -44,13 +45,26 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
     const [graduates, setGraduates] = useState<GraduateStudent[]>(initialData?.graduates || []);
     const [projects, setProjects] = useState<Project[]>(initialData?.projects || []);
     const [news, setNews] = useState<News[]>(initialData?.news || []);
+    const [professors, setProfessors] = useState<Professor[]>(initialData?.professors || []);
     const [loading, setLoading] = useState(!initialData);
 
+    // Always show loading screen initially for smooth transition
     const [showLoading, setShowLoading] = useState(true);
     const [progress, setProgress] = useState(0);
     const progressRef = useRef(0);
     const [showNavbar, setShowNavbar] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+
+    // Remove the CSS loading screen when React takes over
+    useEffect(() => {
+        const initialLoadingEl = document.getElementById('initial-loading');
+        if (initialLoadingEl) {
+            initialLoadingEl.classList.add('hidden');
+            setTimeout(() => {
+                initialLoadingEl.remove();
+            }, 500);
+        }
+    }, []);
 
     useEffect(() => {
         setIsMounted(true);
@@ -85,44 +99,33 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
 
     useEffect(() => {
         // Progress animation logic
-        let startTime = Date.now();
         let animationFrame: number;
         let isDataReady = !!initialData;
 
         const animate = () => {
-            const now = Date.now();
-            const elapsed = now - startTime;
-
             if (isDataReady) {
                 // Data is ready, accelerate to 100%
-                const next = Math.min(100, progressRef.current + 2);
+                const next = Math.min(100, progressRef.current + 3);
                 progressRef.current = next;
                 setProgress(next);
             } else {
-                // Data not ready
-                // 0~2s: 0~90%
-                if (elapsed < 2000) {
-                    const target = (elapsed / 2000) * 90;
-                    progressRef.current = target;
-                    setProgress(target);
-                } else {
-                    // > 2s: Stay at 90%
-                    progressRef.current = 90;
-                    setProgress(90);
-                }
+                // Data not ready - slower progress
+                const next = Math.min(90, progressRef.current + 0.5);
+                progressRef.current = next;
+                setProgress(next);
             }
 
             if (progressRef.current < 100) {
                 animationFrame = requestAnimationFrame(animate);
             } else {
-                // Finished
-                setTimeout(() => setShowLoading(false), 50); // Small delay before hiding
+                // Finished - small delay before hiding loading screen
+                setTimeout(() => setShowLoading(false), 300);
             }
         };
 
         animationFrame = requestAnimationFrame(animate);
 
-        // Check for data if not present
+        // If no initialData, fetch on client side
         if (!initialData) {
             const promise = getDataPromise();
             if (promise) {
@@ -132,41 +135,38 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                         setGraduates(data.graduates || []);
                         setProjects(data.projects || []);
                         setNews(data.news || []);
+                        setProfessors(data.professors || []);
                         setLoading(false);
                         isDataReady = true;
                     } else {
-                        // Data promise timed out, fallback to API calls
                         performFallbackFetch();
                     }
                 }).catch(() => {
-                    // Promise failed, fallback to API calls
                     performFallbackFetch();
                 });
             } else {
-                // No promise available, fallback to API calls
                 performFallbackFetch();
             }
-        } else {
-            isDataReady = true;
         }
 
         function performFallbackFetch() {
             const loadData = async () => {
                 try {
-                    const [students, grads, projs, newsList] = await Promise.all([
+                    const [students, grads, projs, newsList, profs] = await Promise.all([
                         fetchMasterStudents(),
                         fetchGraduateStudents(),
                         fetchProjects(),
-                        fetchNews()
+                        fetchNews(),
+                        fetchProfessors()
                     ]);
                     setMasterStudents(students);
                     setGraduates(grads);
                     setProjects(projs);
                     setNews(newsList);
+                    setProfessors(profs);
                     isDataReady = true;
                 } catch (error) {
                     console.error('Failed to load data:', error);
-                    // Even if failed, we should finish loading
                     isDataReady = true;
                 } finally {
                     setLoading(false);
@@ -176,7 +176,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
         }
 
         return () => cancelAnimationFrame(animationFrame);
-    }, [initialData]); // Run once on mount
+    }, [initialData]);
 
     return (
         <div className="min-h-screen bg-background">
@@ -295,7 +295,8 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
                 <FadeInSection>
                     <TeamSection 
                         masterStudents={masterStudents} 
-                        graduates={graduates} 
+                        graduates={graduates}
+                        professors={professors}
                     />
                 </FadeInSection>
 

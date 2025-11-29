@@ -3,12 +3,12 @@ import { ChevronDown, Mail } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
-import type { MasterStudent, GraduateStudent } from "../../types/notion"
-import profImage from "../../assets/image/prof.jpeg"
+import type { MasterStudent, GraduateStudent, Professor } from "../../types/notion"
 
 interface TeamSectionProps {
   masterStudents: MasterStudent[]
   graduates: GraduateStudent[]
+  professors: Professor[]
 }
 
 interface TeamMember {
@@ -27,33 +27,6 @@ interface TeamMember {
   year?: number
 }
 
-const professorInfo = {
-  name: "신혜련",
-  nameEn: "Hyeryeon Shin",
-  position: "명지대학교 인공지능·소프트웨어융합대학",
-  department: "디지털콘텐츠디자인학과 부교수",
-  role: "現 한국게임정책학회 정책이사",
-  role2: "現 넷마블박물관 고문",
-  email: "worksmju@mju.ac.kr",
-  studentEmail: "worksmju@gmail.com",
-  image: profImage,
-  details: [
-    "▪ 2018~現 명지대학교 인공지능·소프트웨어융합대학 디지털콘텐츠디자인학과 부교수",
-    "Carnegie Mellon University, Computational Design 박사",
-    "[수상]",
-    "한국HCI학회 우수논문상(2025, 2019)",
-    "Archives of Design Research 최우수논문상(2023)",
-    "대한민국학술원 우수학술도서 선정(2023)",
-    "Red Dot Design Award (2023, 2021)",
-    "[대표 프로젝트/논문]",
-    "삼성전자 미래 홈 인비저닝 프로젝트 (2025)",
-    "삼성전자 Intelligent AR 프로젝트 (2024)",
-    "질병청 당뇨예측모형 온라인 계산기 개발 (2024)",
-    "국회 홈페이지 UXUI 가이드라인 디자인 프로젝트 (2023)",
-    "네이버 차세대 검색/AR 디자인 프로젝트(2022)",
-  ],
-}
-
 interface TeamCategory {
   id: string
   title: string
@@ -62,7 +35,7 @@ interface TeamCategory {
   members: TeamMember[]
 }
 
-export function TeamSection({ masterStudents, graduates }: TeamSectionProps) {
+export function TeamSection({ masterStudents, graduates, professors }: TeamSectionProps) {
   const [openCategories, setOpenCategories] = useState<string[]>(["professor", "masters", "graduates"])
   const [expandedMember, setExpandedMember] = useState<string | null>(null)
 
@@ -76,7 +49,16 @@ export function TeamSection({ masterStudents, graduates }: TeamSectionProps) {
       title: "Professor",
       subtitle: "성장은 직선이 아닙니다. 반복과 순환 속에서 서로를 성장시키는 동료를 찾습니다.",
       subtitleEn: "Growth is not linear. We seek teammates who evolve together through cycles of repetition and renewal.",
-      members: [professorInfo],
+      members: professors.map(prof => ({
+        name: prof.name,
+        nameEn: prof.nameEn,
+        position: prof.department,
+        department: prof.position,
+        role: prof.summary[0] || undefined,
+        role2: prof.summary[1] || undefined,
+        image: prof.photo || "https://via.placeholder.com/400x400?text=No+Photo",
+        details: prof.details,
+      })),
     },
     {
       id: "masters",

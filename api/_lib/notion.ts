@@ -1,4 +1,4 @@
-import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion.js';
+import type { MasterStudent, GraduateStudent, Project, News, Professor } from '../types/notion.js';
 
 interface NotionResponse {
   results: Array<any>;
@@ -214,6 +214,71 @@ export const getNews = async (): Promise<News[]> => {
     return news;
   } catch (error) {
     console.error('Failed to fetch news:', error);
+    return [];
+  }
+};
+
+export const getProfessors = async (): Promise<Professor[]> => {
+  const databaseId = getEnv('PROFESSER_LIST_DB');
+  const token = getEnv('DB_SECRETS');
+
+  if (!databaseId || !token) {
+    console.error('Missing environment variables for Professors');
+    return [];
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.notion.com/v1/databases/${databaseId}/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Notion API error:', await response.text());
+      return [];
+    }
+
+    const data: NotionResponse = await response.json();
+
+    const professors = data.results.map((page) => {
+      // 소속 및 직책을 줄바꿈으로 분리
+      const positionText = page.properties['소속 및 직책']?.rich_text[0]?.plain_text || '';
+      const positionLines = positionText.split('\n').filter((line: string) => line.trim());
+      
+      // 대표 경력을 줄바꿈으로 분리
+      const summaryText = page.properties['대표 경력(3줄)']?.rich_text[0]?.plain_text || '';
+      const summaryLines = summaryText.split('\n').filter((line: string) => line.trim());
+      
+      // 상세 경력을 줄바꿈으로 분리
+      const detailsText = page.properties['상세 경력']?.rich_text[0]?.plain_text || '';
+      const detailsLines = detailsText.split('\n').filter((line: string) => line.trim());
+
+      return {
+        name: page.properties['이름(한글)']?.title[0]?.plain_text || '',
+        nameEn: page.properties['이름(영문)']?.rich_text[0]?.plain_text || '',
+        position: positionLines[1] || '', // 두번째 줄이 직책
+        department: positionLines[0] || '', // 첫번째 줄이 소속
+        summary: summaryLines,
+        details: detailsLines,
+        photo: page.properties.사진?.files[0]?.file?.url || '',
+        order: page.properties['순서']?.number || 999,
+      };
+    });
+
+    // 순서 오름차순 정렬
+    professors.sort((a, b) => a.order - b.order);
+
+    // order 필드 제거 후 반환
+    return professors.map(({ order, ...rest }) => rest);
+  } catch (error) {
+    console.error('Failed to fetch professors:', error);
     return [];
   }
 };

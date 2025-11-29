@@ -88,3 +88,13 @@ export interface News {
   link: string;
   tags: string[];
 }
+
+export interface Professor {
+  name: string;
+  nameEn: string;
+  position: string;
+  department: string;
+  summary: string[];
+  details: string[];
+  photo: string;
+}

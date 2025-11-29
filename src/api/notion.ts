@@ -1,9 +1,10 @@
-import type { MasterStudent, GraduateStudent, Project, News } from '../types/notion';
+import type { MasterStudent, GraduateStudent, Project, News, Professor } from '../types/notion';
 
 const API_ENDPOINT = '/api/notion/students';
 const GRADUATES_API_ENDPOINT = '/api/notion/graduates';
 const PROJECTS_API_ENDPOINT = '/api/notion/projects';
 const NEWS_API_ENDPOINT = '/api/notion/news';
+const PROFESSORS_API_ENDPOINT = '/api/notion/professors';
 
 export const fetchMasterStudents = async (): Promise<MasterStudent[]> => {
   try {
@@ -93,6 +94,29 @@ export const fetchNews = async (): Promise<News[]> => {
     return data.news || [];
   } catch (error) {
     console.error('Failed to fetch news:', error);
+    return [];
+  }
+};
+
+export const fetchProfessors = async (): Promise<Professor[]> => {
+  try {
+    const response = await fetch(PROFESSORS_API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API error:', errorData);
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.professors || [];
+  } catch (error) {
+    console.error('Failed to fetch professors:', error);
     return [];
   }
 };
