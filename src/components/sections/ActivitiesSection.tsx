@@ -1,15 +1,17 @@
 import { useState } from "react"
-import { ChevronDown, ExternalLink } from "lucide-react"
+import { ChevronDown, ExternalLink, ArrowRight } from "lucide-react"
 import { Button } from "../ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible"
 import { Card } from "../ui/card"
 import type { News } from "../../types/notion"
+import { parseDetails, formatDate } from "../../utils/parseDetails"
 
 interface ActivitiesSectionProps {
   news: News[]
+  onViewAll?: () => void
 }
 
-export function ActivitiesSection({ news }: ActivitiesSectionProps) {
+export function ActivitiesSection({ news, onViewAll }: ActivitiesSectionProps) {
   const [openItems, setOpenItems] = useState<string[]>([])
 
   const toggleItem = (id: string) => {
@@ -38,84 +40,109 @@ export function ActivitiesSection({ news }: ActivitiesSectionProps) {
         <h2 className="text-3xl md:text-4xl font-bold mb-12">Highlights from Our Activities</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-          {displayNews.map((activity) => (
-            <Collapsible
-              key={activity.id}
-              open={openItems.includes(activity.id)}
-              onOpenChange={() => toggleItem(activity.id)}
-            >
-              <Card className="overflow-hidden h-full flex flex-col">
-                {activity.image && (
-                  <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                    <img
-                      src={activity.image}
-                      alt={activity.title}
-                      className="w-full h-full object-cover transition-transform hover:scale-105"
-                    />
-                    <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full">
-                      <span className="text-xs font-mono font-semibold">{activity.date.split('-')[0]}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-lg font-bold mb-2 line-clamp-2">{activity.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{activity.description}</p>
-
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full mt-auto gap-2 group">
-                      <span>{openItems.includes(activity.id) ? "접기" : "자세히 보기"}</span>
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform ${openItems.includes(activity.id) ? "rotate-180" : ""}`}
+          {displayNews.map((activity) => {
+            const detailSections = parseDetails(activity.details)
+            
+            return (
+              <Collapsible
+                key={activity.id}
+                open={openItems.includes(activity.id)}
+                onOpenChange={() => toggleItem(activity.id)}
+              >
+                <Card className="overflow-hidden h-full flex flex-col">
+                  {activity.image && (
+                    <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                      <img
+                        src={activity.image}
+                        alt={activity.title}
+                        className="w-full h-full object-cover transition-transform hover:scale-105"
                       />
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-
-                <CollapsibleContent>
-                  <div className="px-5 pb-5 space-y-4 border-t border-border pt-4">
-                    <div>
-                      <p className="text-sm font-semibold text-muted-foreground mb-1">날짜</p>
-                      <p className="text-foreground">{activity.date}</p>
+                      <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full">
+                        <span className="text-xs font-mono font-semibold">{activity.date.split('-')[0]}</span>
+                      </div>
                     </div>
+                  )}
 
-                    {activity.description && (
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground mb-1">설명</p>
-                        <p className="text-foreground whitespace-pre-wrap">{activity.description}</p>
-                      </div>
-                    )}
+                  <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="text-lg font-bold mb-2 line-clamp-2">{activity.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{activity.summary}</p>
 
-                    {activity.tags && activity.tags.length > 0 && (
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground mb-2">태그</p>
-                        <div className="flex flex-wrap gap-2">
-                          {activity.tags.map((tag, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-accent rounded-md text-xs">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {activity.link && (
-                      <div>
-                        <p className="text-sm font-semibold text-muted-foreground mb-2">링크</p>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={activity.link} target="_blank" rel="noopener noreferrer" className="gap-2">
-                            바로가기
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </Button>
-                      </div>
-                    )}
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full mt-auto gap-2 group">
+                        <span>{openItems.includes(activity.id) ? "접기" : "자세히 보기"}</span>
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform ${openItems.includes(activity.id) ? "rotate-180" : ""}`}
+                        />
+                      </Button>
+                    </CollapsibleTrigger>
                   </div>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          ))}
+
+                  <CollapsibleContent>
+                    <div className="px-5 pb-5 space-y-4 border-t border-border pt-4">
+                      <div>
+                        <p className="text-sm font-semibold text-muted-foreground mb-1">날짜</p>
+                        <p className="text-foreground">{formatDate(activity.date)}</p>
+                      </div>
+
+                      {detailSections.map((section, idx) => (
+                        <div key={idx}>
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">{section.title}</p>
+                          {section.items.length > 0 ? (
+                            <ul className="space-y-1 text-sm text-foreground">
+                              {section.items.map((item, itemIdx) => (
+                                <li key={itemIdx}>{item}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      ))}
+
+                      {activity.tags && activity.tags.length > 0 && (
+                        <div>
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">태그</p>
+                          <div className="flex flex-wrap gap-2">
+                            {activity.tags.map((tag, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-accent rounded-md text-xs">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activity.link && (
+                        <div>
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">링크</p>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={activity.link} target="_blank" rel="noopener noreferrer" className="gap-2">
+                              바로가기
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            )
+          })}
         </div>
+
+        {/* 더보기 버튼 */}
+        {news.length > 4 && (
+          <div className="flex justify-center mt-10">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="gap-2"
+              onClick={onViewAll}
+            >
+              모든 활동 보기
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   )

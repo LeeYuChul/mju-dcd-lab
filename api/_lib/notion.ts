@@ -201,15 +201,29 @@ export const getNews = async (): Promise<News[]> => {
 
     const data: NotionResponse = await response.json();
 
-    const news = data.results.map((page) => ({
-      id: page.id,
-      title: page.properties.제목.title[0]?.plain_text || '',
-      description: page.properties.설명.rich_text[0]?.plain_text || '',
-      date: page.properties.날짜.date?.start || '',
-      image: page.properties.대표이미지.files[0]?.file.url || null,
-      link: page.properties.링크.rich_text[0]?.plain_text || '',
-      tags: page.properties.태그.multi_select.map((tag: any) => tag.name),
-    }));
+    const news = data.results.map((page) => {
+      // 이미지 URL 처리 - file 또는 external 타입 지원
+      const imageFile = page.properties['대표이미지']?.files[0];
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        if (imageFile.type === 'file') {
+          imageUrl = imageFile.file?.url || null;
+        } else if (imageFile.type === 'external') {
+          imageUrl = imageFile.external?.url || null;
+        }
+      }
+
+      return {
+        id: page.id,
+        title: page.properties['제목']?.title[0]?.plain_text || '',
+        summary: page.properties['요약']?.rich_text[0]?.plain_text || '',
+        details: page.properties['상세 설명']?.rich_text[0]?.plain_text || '',
+        date: page.properties['날짜']?.date?.start || '',
+        image: imageUrl,
+        link: page.properties['링크']?.rich_text[0]?.plain_text || '',
+        tags: page.properties['태그']?.multi_select?.map((tag: any) => tag.name) || [],
+      };
+    });
 
     return news;
   } catch (error) {

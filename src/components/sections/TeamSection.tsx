@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/colla
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import type { MasterStudent, GraduateStudent, Professor } from "../../types/notion"
+import nonProfileSvg from "../../assets/svg/non-profile.svg"
 
 interface TeamSectionProps {
   masterStudents: MasterStudent[]
@@ -56,7 +57,7 @@ export function TeamSection({ masterStudents, graduates, professors }: TeamSecti
         department: prof.position,
         role: prof.summary[0] || undefined,
         role2: prof.summary[1] || undefined,
-        image: prof.photo || "https://via.placeholder.com/400x400?text=No+Photo",
+        image: prof.photo || "",
         details: prof.details,
       })),
     },
@@ -70,7 +71,7 @@ export function TeamSection({ masterStudents, graduates, professors }: TeamSecti
         position: "명지대학교 인공지능·소프트웨어융합대학",
         department: "디지털콘텐츠디자인학과",
         info: student.researchField,
-        image: student.photo || "https://via.placeholder.com/400x400?text=No+Photo",
+        image: student.photo || "",
         year: student.year,
       })),
     },
@@ -87,7 +88,7 @@ export function TeamSection({ masterStudents, graduates, professors }: TeamSecti
           department: deptParts[1] || "디지털콘텐츠디자인학과",
           info: student.researchField,
           currentPosition: student.company,
-          image: student.photo || "https://via.placeholder.com/400x400?text=No+Photo",
+          image: student.photo || "",
           year: student.graduationYear,
         };
       }),
@@ -132,12 +133,20 @@ export function TeamSection({ masterStudents, graduates, professors }: TeamSecti
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {category.members.map((member, idx) => (
                           <Card key={idx} className="overflow-hidden">
-                            <div className="aspect-square bg-muted relative overflow-hidden">
-                              <img
-                                src={member.image || "https://via.placeholder.com/400x400?text=No+Photo"}
-                                alt={member.name}
-                                className="absolute inset-0 w-full h-full object-cover"
-                              />
+                            <div className="aspect-square bg-muted relative overflow-hidden flex items-center justify-center">
+                              {member.image ? (
+                                <img
+                                  src={member.image}
+                                  alt={member.name}
+                                  className="absolute inset-0 w-full h-full object-cover"
+                                />
+                              ) : (
+                                <img
+                                  src={nonProfileSvg}
+                                  alt="No profile"
+                                  className="w-1/2 h-1/2 object-contain"
+                                />
+                              )}
                             </div>
                             <div className="p-4">
                               <h4 className="font-bold text-lg mb-1">{member.name}</h4>

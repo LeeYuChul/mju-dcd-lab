@@ -82,7 +82,8 @@ export interface Project {
 export interface News {
   id: string;
   title: string;
-  description: string;
+  summary: string;
+  details: string;
   date: string;
   image: string | null;
   link: string;

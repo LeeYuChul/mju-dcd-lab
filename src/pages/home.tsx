@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { fetchMasterStudents, fetchGraduateStudents, fetchProjects, fetchNews, fetchProfessors } from '../api/notion';
 import type { MasterStudent, GraduateStudent, Project, News, Professor } from '../types/notion';
 import LoadingScreen from './loading';
+import NewsList from './news_list';
 import { getDataPromise } from '../utils/data';
 import { AnimatePresence, motion } from 'framer-motion';
 import Lottie from 'lottie-react';
@@ -54,6 +55,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
     const progressRef = useRef(0);
     const [showNavbar, setShowNavbar] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [showNewsList, setShowNewsList] = useState(false);
 
     // Remove the CSS loading screen when React takes over
     useEffect(() => {
@@ -178,6 +180,11 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
         return () => cancelAnimationFrame(animationFrame);
     }, [initialData]);
 
+    // NewsList 페이지 표시
+    if (showNewsList) {
+        return <NewsList news={news} onBack={() => setShowNewsList(false)} />;
+    }
+
     return (
         <div className="min-h-screen bg-background">
             <AnimatePresence>
@@ -283,7 +290,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
 
                 {/* Activities Section */}
                 <FadeInSection>
-                    <ActivitiesSection news={news} />
+                    <ActivitiesSection news={news} onViewAll={() => setShowNewsList(true)} />
                 </FadeInSection>
 
                 {/* Research Section */}
