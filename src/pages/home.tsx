@@ -4,6 +4,7 @@ import type { MasterStudent, GraduateStudent, Project, News, Professor } from '.
 import LoadingScreen from './loading';
 import NewsList from './news_list';
 import { getDataPromise } from '../utils/data';
+import { trackPageView } from '../utils/analytics';
 import { AnimatePresence, motion } from 'framer-motion';
 import Lottie from 'lottie-react';
 import scrollDownAnimation from '../assets/animation/ScrollDown.json';
@@ -80,6 +81,7 @@ const Home: React.FC<HomeProps> = ({ initialData }) => {
     useEffect(() => {
         if (!showLoading) {
             document.title = "Core Loop Lab - Home";
+            trackPageView("Core Loop Lab - Home", "/");
         }
     }, [showLoading]);
 

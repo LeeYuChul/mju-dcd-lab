@@ -4,21 +4,21 @@ import './index.css'
 import Home from './pages/home'
 
 // Google Analytics Injection
-const GA_ID = 'G-HL1K7QYTKR';
+import { GA_ID } from './utils/analytics';
+
 if (typeof window !== 'undefined') {
   const script = document.createElement('script');
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
   document.head.appendChild(script);
 
-  // @ts-ignore
   window.dataLayer = window.dataLayer || [];
-  // @ts-ignore
-  function gtag(){window.dataLayer.push(arguments);}
-  // @ts-ignore
-  gtag('js', new Date());
-  // @ts-ignore
-  gtag('config', GA_ID);
+  window.gtag = function gtag(...args: unknown[]) {
+    window.dataLayer.push(args);
+  };
+  window.gtag('js', new Date());
+  // 자동 페이지뷰 비활성화 - 수동으로 전송
+  window.gtag('config', GA_ID, { send_page_view: false });
 }
 
 // @ts-ignore

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ChevronDown, ExternalLink } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../components/ui/collapsible';
 import type { News } from '../types/notion';
 import { parseDetails, formatDate } from '../utils/parseDetails';
+import { trackPageView } from '../utils/analytics';
 
 interface NewsListProps {
   news: News[];
@@ -13,6 +14,11 @@ interface NewsListProps {
 
 const NewsList: React.FC<NewsListProps> = ({ news, onBack }) => {
   const [openItems, setOpenItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    document.title = "Core Loop Lab - Activities";
+    trackPageView("Core Loop Lab - Activities", "/activities");
+  }, []);
 
   const toggleItem = (id: string) => {
     setOpenItems((prev) => 
