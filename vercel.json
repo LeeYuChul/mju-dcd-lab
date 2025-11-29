@@ -1,7 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/notion/(.*)", "destination": "/api/notion/$1" },
-    { "source": "/(.*)", "destination": "/api/ssr" }
+    { "source": "/((?!favicon|android-chrome|apple-touch-icon|manifest\\.json|assets/).*)", "destination": "/api/ssr" }
   ],
   "functions": {
     "api/ssr.ts": {
